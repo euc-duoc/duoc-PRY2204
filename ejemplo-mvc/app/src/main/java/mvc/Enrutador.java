@@ -11,18 +11,16 @@ public class Enrutador {
 
         try {
             switch(args[0]) {
-                case "buscar-vehiculo": {
+                case "buscar-vehiculo" ->  {
                     if(args.length < 2)
                         throw new IllegalArgumentException("Patente no especificada.");
 
                     vc.buscarVehiculo(args[1]);
-                    break;
                 }
-                case "mostrar-todos": {
+                case "mostrar-todos" ->  {
                     vc.mostrarTodosLosVehiculos();
-                    break;
                 }
-                default: throw new IllegalArgumentException("Ruta no encontrada: '" + args[0] + "'.");
+                default -> throw new IllegalArgumentException("Ruta no encontrada: '" + args[0] + "'.");
             }
         } 
         catch (Exception e) {
