@@ -4,6 +4,10 @@
 
 [Ir a proyecto Java](/ejemplos-pds/).
 
-## 1. Ejemplo aquitectura simple MVC
+## 2. Ejemplo arquitectura simple MVC
 
 [Ir a proyecto Java](/ejemplo-mvc/).
+
+## 3. Ejemplo JDBC + Swing + MySQL
+
+[Ir a proyecto Java](/ejemplo-jdbc-mysql/Ejemplo/).
