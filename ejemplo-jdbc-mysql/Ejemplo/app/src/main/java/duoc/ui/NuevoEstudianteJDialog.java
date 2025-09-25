@@ -6,10 +6,12 @@ package duoc.ui;
 
 import duoc.DB;
 import java.awt.event.WindowEvent;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -160,6 +162,50 @@ public class NuevoEstudianteJDialog extends javax.swing.JDialog {
         close();
     }//GEN-LAST:event_jButton1ActionPerformed
 
+    private void agregarEstudiante(int rut, String nombre, String apellido, int edad, String localidad) {
+        try {
+            Connection conn = DB.getInstance().getConnection();
+            
+            String query = new StringBuilder("INSERT INTO estudiante values (")
+                .append(rut + ",")
+                .append("'" + nombre + "',")
+                .append("'" + apellido + "',")
+                .append(edad + ",")
+                .append(localidad == null ? "NULL" : "'" + localidad + "'")
+                .append(")")
+                .toString();
+            
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(query);
+            
+            JOptionPane.showMessageDialog(this, "Estudiante insertado correctamente");
+            close();
+        }
+        catch(SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error de BD:\n" + e.toString());
+        }
+    }
+    
+    private void agregarEstudianteSP(int rut, String nombre, String apellido, int edad, String localidad) {
+        try {
+            Connection conn = DB.getInstance().getConnection();
+            CallableStatement cs = conn.prepareCall("{?=call CREAR_ESTUDIANTE(?,?,?,?,?)}");
+            cs.setInt(2, rut);
+            cs.setString(3, nombre);
+            cs.setString(4, apellido);
+            cs.setInt(5, edad);
+            cs.setString(6, localidad == null ? "NULL" : localidad); 
+            cs.registerOutParameter(1, Types.BOOLEAN);
+            cs.executeUpdate();
+            
+            JOptionPane.showMessageDialog(this, "Estudiante insertado correctamente: " + cs.getBoolean(1));
+            close();
+        }
+        catch(SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error de BD:\n" + e.toString());
+        }
+    }
+    
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         if(rutF.getText().equals("")) {
             JOptionPane.showMessageDialog(this, "Debe ingresar un RUT");
@@ -194,33 +240,15 @@ public class NuevoEstudianteJDialog extends javax.swing.JDialog {
         int edadV = 0;
         
         try {
-            edadV = Integer.parseInt(rutF.getText());
+            edadV = Integer.parseInt(edadF.getText());
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "La edad debe ser numérica");
             return;
-        }            
+        }
         
-        try {
-            Connection conn = DB.getInstance().getConnection();
-            
-            String query = new StringBuilder("INSERT INTO estudiante values (")
-                .append(rutV + ",")
-                .append("'" + nombreF.getText() + "',")
-                .append("'" + apellidoF.getText() + "',")
-                .append(edadV + ",")
-                .append(localidadF.getText().equals("") ? "NULL" : "'" + localidadF.getText() + "'")
-                .append(")")
-                .toString();
-            
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(query);
-            
-            JOptionPane.showMessageDialog(this, "Estudiante insertado correctamente");
-            close();
-        }
-        catch(SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error de BD:\n" + e.toString());
-        }
+        agregarEstudianteSP(rutV, nombreF.getText(), apellidoF.getText(), edadV, 
+            localidadF.getText().equals("") ? null : localidadF.getText()
+        );
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void close() {

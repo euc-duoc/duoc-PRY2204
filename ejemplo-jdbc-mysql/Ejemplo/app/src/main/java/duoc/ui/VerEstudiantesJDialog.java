@@ -5,11 +5,15 @@
 package duoc.ui;
 
 import duoc.DB;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -27,8 +31,33 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
     public VerEstudiantesJDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        llenarTabla();
+        //llenarTabla();
+        llenarTablaConSP();
     }
+    
+    private void llenarTablaConSP() {
+        try {
+            Connection conn = DB.getInstance().getConnection();
+            CallableStatement cs = conn.prepareCall("{call OBTENER_ESTUDIANTES()}");
+            cs.execute();
+            ResultSet rs = cs.getResultSet();
+            
+            while(rs.next()){
+                Object[] row = new Object[] {
+                    rs.getObject("rut"),
+                    rs.getObject("nombre"),
+                    rs.getObject("apellido"),
+                    rs.getObject("edad")
+                };
+                
+                ((DefaultTableModel) jTable1.getModel()).insertRow(rs.getRow() - 1,row);                
+            }
+        }
+        catch(SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error de BD:\n" + e.toString());
+            close();
+        }
+    }  
     
     private void llenarTabla() {        
         try {
@@ -71,6 +100,7 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -88,9 +118,16 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
             Class[] types = new Class [] {
                 java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
             }
         });
         jScrollPane1.setViewportView(jTable1);
@@ -99,6 +136,13 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
+            }
+        });
+
+        jButton2.setText("Eliminar seleccionado");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
             }
         });
 
@@ -116,8 +160,10 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
                 .addContainerGap())
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jButton2)
+                .addGap(18, 18, 18)
                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(185, 185, 185))
+                .addGap(111, 111, 111))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -127,7 +173,9 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton1)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton1)
+                    .addComponent(jButton2))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -137,6 +185,25 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         close();
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        int rut = (int)jTable1.getValueAt(jTable1.getSelectedRow(), 0);
+        
+        try {
+            Connection conn = DB.getInstance().getConnection();
+            CallableStatement cs = conn.prepareCall("{call ELIMINAR_ESTUDIANTE(?)}");
+            cs.setInt(1, rut);            
+            cs.execute();
+            
+            JOptionPane.showMessageDialog(null, "Estudiante eliminado correctamente (RUT = " + rut + ")"); 
+            ((DefaultTableModel)jTable1.getModel()).removeRow(jTable1.getSelectedRow());
+            ((DefaultTableModel)jTable1.getModel()).fireTableDataChanged();
+        }
+        catch(SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error de BD:\n" + e.toString());
+            close();
+        }
+    }//GEN-LAST:event_jButton2ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -177,6 +244,7 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
