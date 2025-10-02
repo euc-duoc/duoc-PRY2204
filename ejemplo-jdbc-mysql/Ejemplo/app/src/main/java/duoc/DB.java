@@ -8,7 +8,7 @@ public final class DB {
     private static DB instance;
     
     public static DB getInstance() throws SQLException {
-        if(instance == null)
+        if(instance == null || instance.getConnection().isClosed())
             instance = new DB();
         
         return instance;

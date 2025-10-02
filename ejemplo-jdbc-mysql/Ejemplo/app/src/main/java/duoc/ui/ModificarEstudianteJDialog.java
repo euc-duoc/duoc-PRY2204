@@ -5,6 +5,9 @@
 package duoc.ui;
 
 import duoc.DB;
+import duoc.Estudiante;
+import duoc.EstudianteModel;
+import java.awt.Container;
 import java.awt.event.WindowEvent;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -19,17 +22,30 @@ import javax.swing.table.DefaultTableModel;
  *
  * @author enriq
  */
-public class NuevoEstudianteJDialog extends javax.swing.JDialog {
+public class ModificarEstudianteJDialog extends javax.swing.JDialog {
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(NuevoEstudianteJDialog.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ModificarEstudianteJDialog.class.getName());
+    
+    private final EstudianteModel eModel;
+    private final Estudiante e;
+    private VerEstudiantesJDialog vPadre;
 
     /**
      * Creates new form NuevoEstudianteJDialog
      */
-    public NuevoEstudianteJDialog(java.awt.Frame parent, boolean modal) {
+    public ModificarEstudianteJDialog(Estudiante e, VerEstudiantesJDialog parent, boolean modal) {
         super(parent, modal);
+        this.vPadre = parent;
         initComponents();
-    }
+        this.e = e;
+        eModel = new EstudianteModel();
+        
+        jLabel7.setText(e.getRut() + "");
+        nombreF.setText(e.getNombre());
+        apellidoF.setText(e.getApellido());
+        edadF.setText(e.getEdad() + "");
+        localidadF.setText(e.getLocalidad());
+    }   
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -47,16 +63,16 @@ public class NuevoEstudianteJDialog extends javax.swing.JDialog {
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
-        rutF = new javax.swing.JTextField();
         apellidoF = new javax.swing.JTextField();
         localidadF = new javax.swing.JTextField();
         nombreF = new javax.swing.JTextField();
         edadF = new javax.swing.JTextField();
         jButton2 = new javax.swing.JButton();
+        jLabel7 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-        jButton1.setText("Cerrar");
+        jButton1.setText("Cancelar");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
@@ -64,7 +80,7 @@ public class NuevoEstudianteJDialog extends javax.swing.JDialog {
         });
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        jLabel1.setText("Nuevo estudiante");
+        jLabel1.setText("Modificar estudiante");
 
         jLabel2.setText("Nombre");
 
@@ -76,20 +92,20 @@ public class NuevoEstudianteJDialog extends javax.swing.JDialog {
 
         jLabel6.setText("Localidad");
 
-        rutF.setText("12345678");
-
         apellidoF.setText("Test2");
 
         nombreF.setText("Test");
 
         edadF.setText("20");
 
-        jButton2.setText("Agregar");
+        jButton2.setText("Modificar");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
+
+        jLabel7.setText("-");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -110,11 +126,11 @@ public class NuevoEstudianteJDialog extends javax.swing.JDialog {
                             .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(43, 43, 43)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(rutF)
                             .addComponent(apellidoF)
                             .addComponent(localidadF)
                             .addComponent(nombreF, javax.swing.GroupLayout.DEFAULT_SIZE, 142, Short.MAX_VALUE)
-                            .addComponent(edadF))))
+                            .addComponent(edadF)
+                            .addComponent(jLabel7))))
                 .addContainerGap(73, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
@@ -131,7 +147,7 @@ public class NuevoEstudianteJDialog extends javax.swing.JDialog {
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
-                    .addComponent(rutF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel7))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel2)
@@ -148,7 +164,7 @@ public class NuevoEstudianteJDialog extends javax.swing.JDialog {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
                     .addComponent(localidadF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 33, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 39, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
                     .addComponent(jButton2))
@@ -161,136 +177,43 @@ public class NuevoEstudianteJDialog extends javax.swing.JDialog {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         close();
     }//GEN-LAST:event_jButton1ActionPerformed
-
-    private void agregarEstudiante(int rut, String nombre, String apellido, int edad, String localidad) {
-        try {
-            Connection conn = DB.getInstance().getConnection();
-            
-            String query = new StringBuilder("INSERT INTO estudiante values (")
-                .append(rut + ",")
-                .append("'" + nombre + "',")
-                .append("'" + apellido + "',")
-                .append(edad + ",")
-                .append(localidad == null ? "NULL" : "'" + localidad + "'")
-                .append(")")
-                .toString();
-            
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(query);
-            
-            JOptionPane.showMessageDialog(this, "Estudiante insertado correctamente");
-            close();
-        }
-        catch(SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error de BD:\n" + e.toString());
-        }
-    }
-    
-    private void agregarEstudianteSP(int rut, String nombre, String apellido, int edad, String localidad) {
-        try {
-            Connection conn = DB.getInstance().getConnection();
-            CallableStatement cs = conn.prepareCall("{?=call CREAR_ESTUDIANTE(?,?,?,?,?)}");
-            cs.setInt(2, rut);
-            cs.setString(3, nombre);
-            cs.setString(4, apellido);
-            cs.setInt(5, edad);
-            cs.setString(6, localidad == null ? "NULL" : localidad); 
-            cs.registerOutParameter(1, Types.BOOLEAN);
-            cs.executeUpdate();
-            
-            JOptionPane.showMessageDialog(this, "Estudiante insertado correctamente: " + cs.getBoolean(1));
-            close();
-        }
-        catch(SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error de BD:\n" + e.toString());
-        }
-    }
-    
+        
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        if(rutF.getText().equals("")) {
-            JOptionPane.showMessageDialog(this, "Debe ingresar un RUT");
-            return;           
+        Estudiante modificar = eModel.convertirDesde(new String [] {
+            jLabel7.getText(),
+            nombreF.getText(),
+            apellidoF.getText(),
+            edadF.getText(),
+            localidadF.getText()
+        });
+        
+        if(modificar == null) {
+            JOptionPane.showMessageDialog(this, eModel.getError());
         }
-        
-        int rutV = 0;
-        
-        try {
-            rutV = Integer.parseInt(rutF.getText());
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "El RUT debe ser numérico");
-            return;
-        }  
-        
-        
-        if(nombreF.getText().equals("")) {
-            JOptionPane.showMessageDialog(this, "Debe ingresar un nombre");
-            return;
-        }            
-        
-        if(apellidoF.getText().equals("")) {
-            JOptionPane.showMessageDialog(this, "Debe ingresar un apellido");
-            return;
-        }            
-        
-        if(edadF.getText().equals("")) {
-            JOptionPane.showMessageDialog(this, "Debe ingresar una edad");
-            return;
+        else {
+            String[] errores = modificar.validar();
+            
+            if(errores.length > 0) {
+                JOptionPane.showMessageDialog(this, String.join("\n", errores));
+            }
+            else {
+                boolean ok = eModel.modificarEstudiante(modificar);
+
+                if(!ok) {
+                    JOptionPane.showMessageDialog(this, "Error de BD:\n" + eModel.getError());
+                }
+                else {
+                    JOptionPane.showMessageDialog(this, "Estudiante modificado correctamente.");
+                    vPadre.actualizarTabla();
+                    close();
+                }
+            }    
         }
-        
-        int edadV = 0;
-        
-        try {
-            edadV = Integer.parseInt(edadF.getText());
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "La edad debe ser numérica");
-            return;
-        }
-        
-        agregarEstudianteSP(rutV, nombreF.getText(), apellidoF.getText(), edadV, 
-            localidadF.getText().equals("") ? null : localidadF.getText()
-        );
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void close() {
         this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
-    }
-    
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the dialog */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                NuevoEstudianteJDialog dialog = new NuevoEstudianteJDialog(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
-    }
+    }   
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField apellidoF;
@@ -303,8 +226,8 @@ public class NuevoEstudianteJDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JTextField localidadF;
     private javax.swing.JTextField nombreF;
-    private javax.swing.JTextField rutF;
     // End of variables declaration//GEN-END:variables
 }

@@ -5,15 +5,10 @@
 package duoc.ui;
 
 import duoc.DB;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import duoc.Estudiante;
+import duoc.EstudianteModel;
 import java.awt.event.WindowEvent;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -28,59 +23,39 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
     /**
      * Creates new form VerEstudiantesJDialog
      */
+    private final EstudianteModel eModel;
+    
     public VerEstudiantesJDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
+        eModel = new EstudianteModel();
         initComponents();
-        //llenarTabla();
-        llenarTablaConSP();
+        actualizarTabla();
     }
     
-    private void llenarTablaConSP() {
-        try {
-            Connection conn = DB.getInstance().getConnection();
-            CallableStatement cs = conn.prepareCall("{call OBTENER_ESTUDIANTES()}");
-            cs.execute();
-            ResultSet rs = cs.getResultSet();
-            
-            while(rs.next()){
-                Object[] row = new Object[] {
-                    rs.getObject("rut"),
-                    rs.getObject("nombre"),
-                    rs.getObject("apellido"),
-                    rs.getObject("edad")
-                };
-                
-                ((DefaultTableModel) jTable1.getModel()).insertRow(rs.getRow() - 1,row);                
-            }
-        }
-        catch(SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error de BD:\n" + e.toString());
+    public void actualizarTabla() {
+        Estudiante[] listado = eModel.obtenerEstudiantes();
+        
+        if(listado == null) {
+            JOptionPane.showMessageDialog(this, "Error de BD:\n" + eModel.getError());
             close();
         }
-    }  
-    
-    private void llenarTabla() {        
-        try {
-            Connection conn = DB.getInstance().getConnection();
-            String query = "SELECT rut, nombre, apellido, edad FROM estudiante";
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(query);
-            
-            while(rs.next()){
+        else {
+            ((DefaultTableModel)jTable1.getModel()).setRowCount(0);
+            int i = 0;
+
+            for(Estudiante e : listado) {
                 Object[] row = new Object[] {
-                    rs.getObject("rut"),
-                    rs.getObject("nombre"),
-                    rs.getObject("apellido"),
-                    rs.getObject("edad")
+                    e.getRut(),
+                    e.getNombre(),
+                    e.getApellido(),
+                    e.getEdad(),
+                    e.getLocalidad()
                 };
-                
-                ((DefaultTableModel) jTable1.getModel()).insertRow(rs.getRow() - 1,row);
+
+                ((DefaultTableModel) jTable1.getModel()).insertRow(i, row);
+                i++;
             }
-        }
-        catch(SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error de BD:\n" + e.toString());
-            close();
-        }
+        }   
     }
     
     private void close() {
@@ -101,6 +76,7 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
         jTable1 = new javax.swing.JTable();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
+        jButton3 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -112,14 +88,14 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
 
             },
             new String [] {
-                "RUT", "Nombre", "Apellido", "Edad"
+                "RUT", "Nombre", "Apellido", "Edad", "Localidad"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false
+                false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -146,6 +122,13 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
             }
         });
 
+        jButton3.setText("Modificar seleccionado");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -156,14 +139,16 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
                     .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 287, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 176, Short.MAX_VALUE)))
+                        .addGap(0, 257, Short.MAX_VALUE)))
                 .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(67, 67, 67)
                 .addComponent(jButton2)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(111, 111, 111))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -172,11 +157,12 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
-                    .addComponent(jButton2))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jButton2)
+                    .addComponent(jButton3))
+                .addContainerGap())
         );
 
         pack();
@@ -187,23 +173,31 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        int rut = (int)jTable1.getValueAt(jTable1.getSelectedRow(), 0);
+        Estudiante e = new Estudiante();
+        e.setRut((int)jTable1.getValueAt(jTable1.getSelectedRow(), 0));
         
-        try {
-            Connection conn = DB.getInstance().getConnection();
-            CallableStatement cs = conn.prepareCall("{call ELIMINAR_ESTUDIANTE(?)}");
-            cs.setInt(1, rut);            
-            cs.execute();
-            
-            JOptionPane.showMessageDialog(null, "Estudiante eliminado correctamente (RUT = " + rut + ")"); 
-            ((DefaultTableModel)jTable1.getModel()).removeRow(jTable1.getSelectedRow());
-            ((DefaultTableModel)jTable1.getModel()).fireTableDataChanged();
+        boolean ok = eModel.eliminarEstudiante(e);
+        
+        if(!ok) {
+            JOptionPane.showMessageDialog(this, "Error de BD:\n" + eModel.getError());
         }
-        catch(SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error de BD:\n" + e.toString());
-            close();
+        else {
+            JOptionPane.showMessageDialog(null, "Estudiante eliminado correctamente (RUT = " + e.getRut() + ")");
+            actualizarTabla();
         }
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        Estudiante e = new Estudiante();
+        e.setRut((int)jTable1.getValueAt(jTable1.getSelectedRow(), 0));
+        e.setNombre((String)jTable1.getValueAt(jTable1.getSelectedRow(), 1));
+        e.setApellido((String)jTable1.getValueAt(jTable1.getSelectedRow(), 2));
+        e.setEdad((int)jTable1.getValueAt(jTable1.getSelectedRow(), 3));
+        e.setLocalidad((String)jTable1.getValueAt(jTable1.getSelectedRow(), 4));
+
+        JDialog dialog = new ModificarEstudianteJDialog(e, this, true);
+        dialog.setVisible(true);
+    }//GEN-LAST:event_jButton3ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -245,6 +239,7 @@ public class VerEstudiantesJDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
